@@ -6,8 +6,8 @@ BAHA is a smart flood-risk assessment feature designed to help commuters and res
 ## The Gastos Committee
 A group composed of computer science and information technology students, and an IT professional, brought together by the love and curiosity of exploring new things, conquering one side quest at a time.
 
-Team Lead: Lorie Andelene B. Sariba
-Members:
-Adornado Cabalbag
-Kristina Marie Margelino
-Clyde Justin Nate
+Team Lead: Lorie Andelene B. Sariba\
+Members:\
+Adornado Cabalbag\
+Kristina Marie Margelino\
+Clyde Justin Nate\
