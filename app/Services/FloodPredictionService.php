@@ -41,6 +41,32 @@ class FloodPredictionService
             ]);
         }
     }
+
+    private function calculateHeuristicConfidence($rainfall, $waterLevel)
+    {
+        // 1. BASELINE: Start with a high score (The model is generally good)
+        $score = 95;
+
+        // 2. PENALTY: Heavy Rainfall (Linear models struggle with extreme outliers)
+        // If rain is > 50mm/hr, drop confidence significantly
+        if ($rainfall > 50) {
+            $score -= 15; // Drops to ~80%
+        } elseif ($rainfall > 20) {
+            $score -= 5;  // Drops to ~90%
+        }
+
+        // 3. BONUS: Dry Conditions (It is very easy to predict "Dry")
+        if ($rainfall == 0 && $waterLevel < 5) {
+            return 99; // We are 99% sure it's not flooding if it's not raining
+        }
+
+        // 4. SANITY CHECK: If prediction is impossible (negative water), confidence is 0
+        if ($waterLevel < 0) {
+            return 0; 
+        }
+
+        return $score;
+    }
     
 
     private function calculateRisk($level)

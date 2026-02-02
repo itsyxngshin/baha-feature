@@ -87,7 +87,7 @@
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                         <div class="text-purple-500 text-xl mb-1">📈</div>
                         <div class="text-lg font-bold text-gray-800">{{ $selectedHotspot->confidence_score }}%</div>
-                        <div class="text-[10px] text-gray-400 uppercase">Model Conf.</div>
+                        <div class="text-[10px] text-gray-400 uppercase">Data Quality</div>
                     </div>
                 </div>
 
