@@ -41,6 +41,7 @@ class FloodPredictionService
             ]);
         }
     }
+    
 
     private function calculateRisk($level)
     {
