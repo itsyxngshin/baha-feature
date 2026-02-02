@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('hotspots', function (Blueprint $table) {
             $table->id();
             $table->string('name'); 
-            $table->decimal('latitude', 10, 8);
-            $table->decimal('longitude', 10, 8);
+            $table->decimal('latitude', 10, 8);  // Latitude max is 90 (2 digits), so 10,8 is fine
+            $table->decimal('longitude', 11, 8); // Longitude max is 180 (3 digits), so 11,8 is required
             
             // --- ML Model Inputs (Features) ---
             // These must match the columns your .pkl model expects
