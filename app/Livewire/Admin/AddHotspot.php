@@ -4,7 +4,9 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Models\Hotspot;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.app')]
 class AddHotspot extends Component
 {
     public $name, $latitude, $longitude, $elevation_m, $drainage_level;
