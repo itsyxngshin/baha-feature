@@ -114,18 +114,27 @@
     </div>
 
     <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 py-2 px-6 flex justify-between items-center z-[700] text-[10px] font-bold text-gray-400 uppercase">
-        <div class="flex flex-col items-center gap-1">
-            <div class="w-5 h-5 bg-gray-200 rounded"></div> Home
-        </div>
-        <div class="flex flex-col items-center gap-1 text-emerald-600">
-            <div class="w-5 h-5 bg-emerald-100 rounded"></div> Baha Map
-        </div>
-        <div class="flex flex-col items-center gap-1">
-            <div class="w-5 h-5 bg-gray-200 rounded"></div> Services
-        </div>
-        <div class="flex flex-col items-center gap-1">
-            <div class="w-5 h-5 bg-gray-200 rounded"></div> Profile
-        </div>
+    
+        <a href="{{ route('home') }}" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
+            <div class="w-5 h-5 bg-gray-200 rounded"></div> 
+            Home
+        </a>
+
+        <a href="{{ route('baha.map') }}" class="flex flex-col items-center gap-1 text-emerald-600">
+            <div class="w-5 h-5 bg-emerald-100 rounded"></div> 
+            Baha Map
+        </a>
+
+        <a href="{{ route('services') }}" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
+            <div class="w-5 h-5 bg-gray-200 rounded"></div> 
+            Services
+        </a>
+
+        <a href="{{ route('profile') }}" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
+            <div class="w-5 h-5 bg-gray-200 rounded"></div> 
+            Profile
+        </a>
+
     </div>
 </div>
 
