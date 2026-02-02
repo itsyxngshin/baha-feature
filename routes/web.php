@@ -1,20 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Livewire\BahaMap; // Import your component
+use App\Livewire\BahaMap; 
+use App\Livewire\Admin\AddHotspot;
 
-// 1. The Main "Baha Map" Route
-// This tells Laravel: "When the user visits /map, render the BahaMap component"
+Route::get('/admin/add-hotspot', AddHotspot::class)->name('admin.add');
 Route::get('/map', BahaMap::class)->name('baha.map');
-
-// 2. Placeholder Routes for the other menu items (optional)
-// You can replace these with actual components later
 Route::get('/', function () {
     return redirect()->route('baha.map'); // Redirect home to map for now
 })->name('home');
 
 Route::get('/services', function () {
-    return view('services'); // You'll need to create a resources/views/services.blade.php
+    return view('services'); 
 })->name('services');
 
 Route::get('/profile', function () {
