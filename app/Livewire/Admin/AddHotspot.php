@@ -17,28 +17,24 @@ class AddHotspot extends Component
             'name' => 'required|string',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'elevation_m' => 'required|numeric', // Critical for ML model
             'drainage_level' => 'required|integer|min:1|max:10',
         ]);
 
         Hotspot::create([
-            'name' => $this->name, 
+            'name' => $this->name,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'elevation_m' => $this->elevation_m,
             'drainage_level' => $this->drainage_level,
-            // Default values for dynamic fields
             'rainfall_mm_hr' => 0,
             'previous_rainfall_mm' => 0,
             'water_level_cm' => 0,
             'status' => 'clear'
         ]);
 
-        $this->reset();
-        session()->flash('message', 'New road added successfully!');
-        
-        // Optional: Trigger a recalculation immediately
-        // \Illuminate\Support\Facades\Artisan::call('baha:predict');
+        $this->reset(); 
+
+        // TRIGGER THE TOAST
+        $this->dispatch('road-saved'); 
     }
 
     public function render()
