@@ -110,3 +110,32 @@
         }
     }
 </script>
+
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        Livewire.on('road-saved', () => {
+            // 1. Show Success Toast
+            Swal.fire({
+                icon: 'success',
+                title: 'Road Added!',
+                text: 'Elevation data will be auto-fetched.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#ECFDF5', // Emerald-50
+                color: '#065F46' // Emerald-800
+            });
+
+            // 2. Clear the Map Pin (Visual Reset)
+            // We need to access the Alpine component scope to remove the marker
+            // A simple page reload is often easiest, but for SPA feel:
+            const mapComponent = document.querySelector('[x-data]').__x.$data;
+            if(mapComponent.marker) {
+                mapComponent.map.removeLayer(mapComponent.marker);
+                mapComponent.marker = null;
+            }
+        });
+    });
+</script>
