@@ -25,23 +25,23 @@
     </div>
 
     <div class="absolute bottom-32 right-4 z-[500]">
-        <button class="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg transition">
+        <button @click="resetMap()" class="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
         </button>
     </div>
 
     <div 
         class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[600] transition-transform duration-300 ease-in-out transform"
-        :class="detailOpen ? 'translate-y-0 h-[60vh]' : 'translate-y-[calc(100%-80px)] h-auto'"
+        :class="detailOpen ? 'translate-y-0 h-[65vh]' : 'translate-y-[calc(100%-80px)] h-auto'"
     >
-        <div class="w-full flex justify-center pt-3 pb-1" @click="detailOpen = !detailOpen">
+        <div class="w-full flex justify-center pt-3 pb-1 cursor-pointer" @click="detailOpen = !detailOpen">
             <div class="w-12 h-1.5 bg-gray-200 rounded-full"></div>
         </div>
 
-        <div class="p-6 h-full overflow-y-auto">
+        <div class="p-6 h-full overflow-y-auto pb-20">
             
             @if($selectedHotspot)
-                <button wire:click="clearSelection" class="text-xs text-emerald-600 font-bold mb-4 flex items-center">
+                <button wire:click="clearSelection" @click="detailOpen = true" class="text-xs text-emerald-600 font-bold mb-4 flex items-center hover:underline">
                     ← OVERVIEW
                 </button>
 
@@ -50,8 +50,11 @@
                         {{ $selectedHotspot->name }} <br> Hotspot
                     </h2>
                     <div class="text-right">
-                        <span class="block text-2xl font-black text-gray-800">{{ $selectedHotspot->water_level_cm }}cm</span>
-                        <span class="text-[10px] text-gray-400 uppercase">Water Level</span>
+                        <span class="block text-3xl font-black text-gray-800">{{ round($selectedHotspot->water_level_cm) }}cm</span>
+                        <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Water Level</span>
+                        <span class="text-[10px] text-gray-400 italic block mt-1">
+                            updated {{ $selectedHotspot->updated_at->format('g:i A') }}
+                        </span>
                     </div>
                 </div>
 
@@ -59,53 +62,105 @@
                     <span class="inline-block px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full mb-6">
                         ⓧ IMPASSABLE
                     </span>
+                @elseif($selectedHotspot->status === 'moderate')
+                    <span class="inline-block px-3 py-1 bg-amber-100 text-amber-600 text-xs font-bold rounded-full mb-6">
+                        ⚠ CAUTION
+                    </span>
+                @else
+                    <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-600 text-xs font-bold rounded-full mb-6">
+                        ✓ PASSABLE
+                    </span>
                 @endif
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-gray-50 p-4 rounded-2xl">
-                        <div class="text-emerald-500 text-xl mb-1">💧</div>
-                        <div class="text-lg font-bold text-gray-800">{{ $selectedHotspot->rainfall_mm }}mm</div>
-                        <div class="text-[10px] text-gray-400 uppercase">Rainfall</div>
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="text-blue-500 text-xl">💧</div>
+                            <span class="text-[10px] text-gray-400">Past Hr</span>
+                        </div>
+                        <div class="text-lg font-bold text-gray-800">{{ $selectedHotspot->rainfall_mm_hr }}mm</div>
+                        <div class="text-[10px] text-gray-400 uppercase mt-1">
+                            Prev: {{ $selectedHotspot->previous_rainfall_mm }}mm
+                        </div>
                     </div>
-                    <div class="bg-gray-50 p-4 rounded-2xl">
+
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                         <div class="text-purple-500 text-xl mb-1">📈</div>
                         <div class="text-lg font-bold text-gray-800">{{ $selectedHotspot->confidence_score }}%</div>
-                        <div class="text-[10px] text-gray-400 uppercase">Prediction Conf.</div>
+                        <div class="text-[10px] text-gray-400 uppercase">Model Conf.</div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-2xl mb-6">
+                    <h5 class="text-xs font-bold text-blue-800 uppercase mb-2">Location Profile</h5>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-blue-600">Elevation:</span>
+                        <span class="font-bold text-blue-900">{{ $selectedHotspot->elevation_m }}m</span>
+                    </div>
+                    <div class="flex justify-between text-sm mt-1">
+                        <span class="text-blue-600">Drainage Rating:</span>
+                        <span class="font-bold text-blue-900">{{ $selectedHotspot->drainage_level }}/10</span>
                     </div>
                 </div>
 
             @else
-                <h3 class="text-xl font-bold text-gray-800 mb-1">Live Flood Zones</h3>
-                <p class="text-sm text-gray-500 mb-6">Active Hotspot Mapping</p>
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">Live Flood Zones</h3>
+                        <p class="text-sm text-gray-500">Active Hotspot Mapping</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Live
+                        </span>
+                        @if($hotspots->count() > 0)
+                        <div class="text-[10px] text-gray-400 mt-1">
+                            Updated {{ $hotspots->first()->updated_at->diffForHumans() }}
+                        </div>
+                        @endif
+                    </div>
+                </div>
 
-                <div class="flex space-x-4 mb-6 overflow-x-auto">
+                <div class="flex space-x-4 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                     <div class="min-w-[140px] bg-white border border-gray-100 shadow-sm p-4 rounded-2xl">
                         <span class="text-blue-500 text-xl">🌧️</span>
-                        <div class="text-xl font-bold mt-2">12.4mm</div>
-                        <div class="text-xs text-gray-400">AVG RAINFALL</div>
+                        <div class="text-xl font-bold mt-2">{{ round($hotspots->avg('rainfall_mm_hr'), 1) }}mm</div>
+                        <div class="text-[10px] text-gray-400 uppercase font-bold tracking-wide">AVG RAINFALL</div>
                     </div>
                     <div class="min-w-[140px] bg-white border border-gray-100 shadow-sm p-4 rounded-2xl">
                         <span class="text-purple-500 text-xl">⚡</span>
                         <div class="text-xl font-bold mt-2">94%</div>
-                        <div class="text-xs text-gray-400">CONFIDENCE</div>
+                        <div class="text-[10px] text-gray-400 uppercase font-bold tracking-wide">CONFIDENCE</div>
                     </div>
                 </div>
 
-                <h4 class="text-xs font-bold text-gray-400 uppercase mb-3">Affected Areas</h4>
+                <h4 class="text-xs font-bold text-gray-400 uppercase mb-3 tracking-widest">Affected Areas</h4>
                 
                 <div class="space-y-3">
                     @foreach($hotspots as $spot)
-                    <div wire:click="selectHotspot({{ $spot->id }})" class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl shadow-sm cursor-pointer hover:bg-gray-50 transition">
+                    <div wire:click="selectHotspot({{ $spot->id }})" @click="detailOpen = true" class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl shadow-sm cursor-pointer hover:bg-gray-50 transition group">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3" style="background-color: {{ $spot->status === 'flooded' ? '#FEE2E2' : '#D1FAE5' }}">
-                                <div class="w-3 h-3 rounded-full" style="background-color: {{ $spot->color }}"></div>
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 transition-colors" 
+                                 style="background-color: {{ $spot->status === 'flooded' ? '#FEE2E2' : ($spot->status === 'moderate' ? '#FEF3C7' : '#D1FAE5') }}">
+                                <div class="w-3 h-3 rounded-full shadow-sm" style="background-color: {{ $spot->color }}"></div>
                             </div>
                             <div>
-                                <h5 class="text-sm font-bold text-gray-800">{{ $spot->name }}</h5>
-                                <span class="text-xs text-gray-500">Est. Depth: {{ $spot->water_level_cm }}cm</span>
+                                <h5 class="text-sm font-bold text-gray-800 group-hover:text-emerald-600 transition">{{ $spot->name }}</h5>
+                                <span class="text-xs text-gray-500 flex items-center">
+                                    <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Level: {{ round($spot->water_level_cm) }}cm
+                                </span>
                             </div>
                         </div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <div class="text-right">
+                             @if($spot->status === 'flooded')
+                                <span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded">High Risk</span>
+                             @elseif($spot->status === 'moderate')
+                                <span class="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded">Med Risk</span>
+                             @else
+                                <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded">Safe</span>
+                             @endif
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -114,27 +169,20 @@
     </div>
 
     <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 py-2 px-6 flex justify-between items-center z-[700] text-[10px] font-bold text-gray-400 uppercase">
-    
-        <a href="{{ route('home') }}" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
-            <div class="w-5 h-5 bg-gray-200 rounded"></div> 
-            Home
+        <a href="#" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
+            <div class="w-5 h-5 bg-gray-200 rounded"></div> Home
         </a>
-
         <a href="{{ route('baha.map') }}" class="flex flex-col items-center gap-1 text-emerald-600">
-            <div class="w-5 h-5 bg-emerald-100 rounded"></div> 
-            Baha Map
+            <div class="w-5 h-5 bg-emerald-100 rounded text-emerald-600 flex items-center justify-center">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+            </div> Baha Map
         </a>
-
-        <a href="{{ route('services') }}" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
-            <div class="w-5 h-5 bg-gray-200 rounded"></div> 
-            Services
+        <a href="#" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
+            <div class="w-5 h-5 bg-gray-200 rounded"></div> Services
         </a>
-
-        <a href="{{ route('profile') }}" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
-            <div class="w-5 h-5 bg-gray-200 rounded"></div> 
-            Profile
+        <a href="#" class="flex flex-col items-center gap-1 hover:text-emerald-600 transition">
+            <div class="w-5 h-5 bg-gray-200 rounded"></div> Profile
         </a>
-
     </div>
 </div>
 
@@ -143,34 +191,58 @@
         return {
             map: null,
             detailOpen: false,
+            
             init() {
-                // Initialize Leaflet
-                this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14); // Naga City Coords
+                this.initMap();
+                
+                // Listen for Livewire events to update map dynamically
+                Livewire.on('hotspotsUpdated', () => {
+                    // Logic to re-render markers if needed (advanced)
+                    console.log('Data refreshed');
+                });
+            },
 
-                // Add Tile Layer (using CartoDB Voyager for that clean look)
+            initMap() {
+                // Initialize Leaflet
+                // Centered on Naga City
+                this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14); 
+
+                // Clean Map Style
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     attribution: '&copy; OpenStreetMap &copy; CARTO',
-                    subdomains: 'abcd',
                     maxZoom: 20
                 }).addTo(this.map);
 
-                // Load Markers from Livewire Data
+                // Load Data
                 const locations = @json($hotspots);
                 
                 locations.forEach(loc => {
-                    // Create Custom Colored Circle Marker
+                    // Determine Color (using the logic from your Model or JS fallback)
+                    let color = '#10B981'; // Green default
+                    if(loc.status === 'flooded') color = '#EF4444';
+                    if(loc.status === 'moderate') color = '#F59E0B';
+
+                    // Create Marker
                     const circle = L.circleMarker([loc.latitude, loc.longitude], {
-                        color: loc.status === 'flooded' ? '#EF4444' : (loc.status === 'moderate' ? '#F59E0B' : '#10B981'),
-                        fillColor: loc.status === 'flooded' ? '#EF4444' : (loc.status === 'moderate' ? '#F59E0B' : '#10B981'),
-                        fillOpacity: 0.5,
-                        radius: 12 // Large radius for the "glow" look
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.6,
+                        radius: 14,
+                        weight: 2
                     }).addTo(this.map);
 
-                    // Add click event to talk to Livewire
+                    // Click Event
                     circle.on('click', () => {
                         this.$wire.selectHotspot(loc.id);
-                        this.detailOpen = true; // Open bottom sheet
+                        this.detailOpen = true; // Open the sheet
                     });
+                });
+            },
+
+            resetMap() {
+                this.map.flyTo([13.621775, 123.194830], 14, {
+                    animate: true,
+                    duration: 1.5
                 });
             }
         }

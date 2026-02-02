@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Hotspot;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.app')]
 class BahaMap extends Component
 {
     public $hotspots;
