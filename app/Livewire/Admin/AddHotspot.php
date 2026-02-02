@@ -18,11 +18,11 @@ class AddHotspot extends Component
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'elevation_m' => 'required|numeric', // Critical for ML model
-            'drainage_level' => 'required|integer|min(1)|max(10)',
+            'drainage_level' => 'required|integer|min:1|max:10',
         ]);
 
         Hotspot::create([
-            'name' => $this->name,
+            'name' => $this->name, 
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'elevation_m' => $this->elevation_m,
