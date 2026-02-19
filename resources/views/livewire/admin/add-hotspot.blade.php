@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6" x-data="adminMap()">
 
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[80vh]">
@@ -16,7 +19,21 @@
 
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Road / Zone Name</label>
-                    <input wire:model="name" type="text" placeholder="e.g. Roxas Avenue (North)" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition">
+                    <div class="relative">
+                        <input
+                            wire:model="name"
+                            type="text"
+                            :placeholder="isFetching ? 'Locating road...' : 'e.g. Roxas Avenue (North)'"
+                            :disabled="isFetching"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
+                        >
+                        <div x-show="isFetching" class="absolute right-3 top-2.5">
+                            <svg class="animate-spin h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </div>
                     @error('name') <span class="text-red-500 text-[10px]">{{ $message }}</span> @enderror
                 </div>
 
@@ -36,11 +53,11 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase">Latitude</label>
-                        <input wire:model="latitude" type="text" readonly class="w-full bg-gray-100 text-gray-500 rounded px-2 py-1 text-xs">
+                        <input wire:model="latitude" type="text" readonly class="w-full bg-gray-100 text-gray-500 rounded px-2 py-1 text-xs outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase">Longitude</label>
-                        <input wire:model="longitude" type="text" readonly class="w-full bg-gray-100 text-gray-500 rounded px-2 py-1 text-xs">
+                        <input wire:model="longitude" type="text" readonly class="w-full bg-gray-100 text-gray-500 rounded px-2 py-1 text-xs outline-none">
                     </div>
                 </div>
                 @error('latitude') <span class="text-red-500 text-[10px]">Please click map to set location</span> @enderror
@@ -56,7 +73,7 @@
         </div>
 
         <div class="w-full md:w-2/3 relative">
-            <div id="admin-map" wire:ignore class="h-full w-full"></div>
+            <div id="admin-map" wire:ignore class="h-full w-full z-0"></div>
 
             <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm z-[500] text-xs font-medium text-gray-600">
                 📍 Click anywhere to drop a pin
@@ -71,60 +88,61 @@
         return {
             map: null,
             marker: null,
-            isFetching: false, // Loading state for the text input
+            isFetching: false, // Controls the loading spinner!
 
             init() {
-                this.map = L.map('admin-map').setView([13.621775, 123.194830], 14);
+                // Small timeout ensures the DOM is ready for Leaflet
+                setTimeout(() => {
+                    this.map = L.map('admin-map').setView([13.621775, 123.194830], 14);
 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap',
-                    maxZoom: 20
-                }).addTo(this.map);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap',
+                        maxZoom: 20
+                    }).addTo(this.map);
 
-                // CLICK EVENT
-                this.map.on('click', async (e) => {
-                    const lat = e.latlng.lat.toFixed(6);
-                    const lng = e.latlng.lng.toFixed(6);
+                    // CLICK EVENT
+                    this.map.on('click', async (e) => {
+                        const lat = e.latlng.lat.toFixed(6);
+                        const lng = e.latlng.lng.toFixed(6);
 
-                    // 1. Set Coordinates in Livewire
-                    this.$wire.set('latitude', lat);
-                    this.$wire.set('longitude', lng);
+                        // 1. Set Coordinates in Livewire
+                        this.$wire.set('latitude', lat);
+                        this.$wire.set('longitude', lng);
 
-                    // 2. Move or Create Marker
-                    if (this.marker) {
-                        this.marker.setLatLng(e.latlng);
-                    } else {
-                        this.marker = L.marker(e.latlng, { draggable: true }).addTo(this.map);
-                    }
+                        // 2. Move or Create Marker
+                        if (this.marker) {
+                            this.marker.setLatLng(e.latlng);
+                        } else {
+                            this.marker = L.marker(e.latlng, { draggable: true }).addTo(this.map);
+                        }
 
-                    // 3. AUTO-IDENTIFY ROAD NAME
-                    this.fetchRoadName(lat, lng);
-                });
+                        // 3. AUTO-IDENTIFY ROAD NAME
+                        this.fetchRoadName(lat, lng);
+                    });
+                }, 100);
             },
 
             async fetchRoadName(lat, lng) {
-                this.isFetching = true;
+                this.isFetching = true; // Turn on the loading spinner
 
                 try {
-                    // Call the free OpenStreetMap Reverse Geocoding API
+                    // Ask OpenStreetMap what road this is
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                     const data = await response.json();
 
                     if (data && data.address) {
-                        // Try to find the most relevant name (Road > Suburb > City)
                         const road = data.address.road || data.address.pedestrian || data.address.suburb || "Unnamed Area";
                         const area = data.address.neighbourhood || data.address.city || "";
 
-                        // Combine them (e.g., "General Luna Street, Naga")
                         const fullName = area ? `${road}, ${area}` : road;
 
-                        // Auto-fill the Livewire input!
+                        // Type it into the text box magically
                         this.$wire.set('name', fullName);
                     }
                 } catch (error) {
                     console.error("Could not find road name", error);
                 } finally {
-                    this.isFetching = false;
+                    this.isFetching = false; // Turn off the loading spinner
                 }
             }
         }
@@ -144,13 +162,11 @@
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
-                background: '#ECFDF5', // Emerald-50
-                color: '#065F46' // Emerald-800
+                background: '#ECFDF5',
+                color: '#065F46'
             });
 
-            // 2. Clear the Map Pin (Visual Reset)
-            // We need to access the Alpine component scope to remove the marker
-            // A simple page reload is often easiest, but for SPA feel:
+            // 2. Clear the Map Pin
             const mapComponent = document.querySelector('[x-data]').__x.$data;
             if(mapComponent.marker) {
                 mapComponent.map.removeLayer(mapComponent.marker);
