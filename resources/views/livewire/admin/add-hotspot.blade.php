@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6" x-data="adminMap()">
+<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6" x-data="adminMap($wire)">
 
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[80vh]">
 
@@ -20,14 +20,14 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Road / Zone Name</label>
                     <div class="relative">
-                        <input
-                            wire:model="name"
-                            type="text"
-                            :placeholder="isFetching ? 'Locating road...' : 'e.g. Roxas Avenue (North)'"
+                        <input 
+                            wire:model="name" 
+                            type="text" 
+                            :placeholder="isFetching ? 'Locating road...' : 'e.g. Roxas Avenue (North)'" 
                             :disabled="isFetching"
                             class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
                         >
-                        <div x-show="isFetching" class="absolute right-3 top-2.5">
+                        <div x-show="isFetching" class="absolute right-3 top-2.5" style="display: none;">
                             <svg class="animate-spin h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -84,11 +84,12 @@
 </div>
 
 <script>
-    function adminMap() {
+    // Accept $wire as a parameter
+    function adminMap($wire) {
         return {
             map: null,
             marker: null,
-            isFetching: false, // Controls the loading spinner!
+            isFetching: false,
 
             init() {
                 // Small timeout ensures the DOM is ready for Leaflet
@@ -105,7 +106,6 @@
                         const lat = e.latlng.lat.toFixed(6);
                         const lng = e.latlng.lng.toFixed(6);
 
-                        // 1. VISUALLY DROP THE PIN FIRST (Fixes the invisible marker bug)
                         if (this.marker) {
                             this.marker.setLatLng(e.latlng);
                         } else {
@@ -120,39 +120,40 @@
                                     </div>
                                 `,
                                 iconSize: [40, 40],
-                                iconAnchor: [20, 40] // Anchors the exact bottom tip of the pin to the click point
+                                iconAnchor: [20, 40] 
                             });
 
                             this.marker = L.marker(e.latlng, { icon: customPin, draggable: true }).addTo(this.map);
 
-                            // ALLOW DRAGGING TO ADJUST LOCATION
+                            // DRAG EVENT
                             this.marker.on('dragend', (event) => {
                                 const pos = event.target.getLatLng();
                                 const dragLat = pos.lat.toFixed(6);
                                 const dragLng = pos.lng.toFixed(6);
-
-                                this.$wire.set('latitude', dragLat);
-                                this.$wire.set('longitude', dragLng);
+                                
+                                // Direct $wire call
+                                $wire.set('latitude', dragLat);
+                                $wire.set('longitude', dragLng);
                                 this.fetchRoadName(dragLat, dragLng);
                             });
                         }
 
-                        // 2. TELL LIVEWIRE TO UPDATE TEXT BOXES
-                        this.$wire.set('latitude', lat);
-                        this.$wire.set('longitude', lng);
+                        // Direct $wire call
+                        $wire.set('latitude', lat);
+                        $wire.set('longitude', lng);
 
-                        // 3. AUTO-IDENTIFY ROAD NAME
                         this.fetchRoadName(lat, lng);
                     });
                 }, 100);
             },
 
             async fetchRoadName(lat, lng) {
-                this.isFetching = true; // Turn on the loading spinner
+                this.isFetching = true;
 
                 try {
-                    // Ask OpenStreetMap what road this is
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                        headers: { 'Accept-Language': 'en' }
+                    });
                     const data = await response.json();
 
                     if (data && data.address) {
@@ -161,13 +162,16 @@
 
                         const fullName = area ? `${road}, ${area}` : road;
 
-                        // Type it into the text box magically
-                        this.$wire.set('name', fullName);
+                        $wire.set('name', fullName);
+                    } else {
+                        $wire.set('name', "Unknown Location");
                     }
                 } catch (error) {
                     console.error("Could not find road name", error);
+                    // Fallback so you aren't stuck if the API fails
+                    $wire.set('name', "Map Clicked (Name Unavailable)");
                 } finally {
-                    this.isFetching = false; // Turn off the loading spinner
+                    this.isFetching = false;
                 }
             }
         }
@@ -177,23 +181,25 @@
 <script>
     document.addEventListener('livewire:initialized', () => {
         Livewire.on('road-saved', () => {
-            // 1. Show Success Toast
-            Swal.fire({
-                icon: 'success',
-                title: 'Road Added!',
-                text: 'Elevation data will be auto-fetched.',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                background: '#ECFDF5',
-                color: '#065F46'
-            });
+            // 1. Show Success Toast (If SweetAlert is globally available, else fallback)
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Road Added!',
+                    text: 'Elevation data will be auto-fetched.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    background: '#ECFDF5', 
+                    color: '#065F46' 
+                });
+            }
 
             // 2. Clear the Map Pin
             const mapComponent = document.querySelector('[x-data]').__x.$data;
-            if(mapComponent.marker) {
+            if(mapComponent && mapComponent.marker) {
                 mapComponent.map.removeLayer(mapComponent.marker);
                 mapComponent.marker = null;
             }
