@@ -24,13 +24,32 @@
         </div>
     </div>
 
+    <div class="absolute bottom-48 right-4 z-[500]">
+        <button
+            @click="locateMe()"
+            class="bg-white text-gray-600 hover:text-blue-600 p-3 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center group"
+            :class="loadingLocation ? 'cursor-wait' : ''"
+            title="Find my location"
+        >
+            <svg x-show="loadingLocation" class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+
+            <svg x-show="!loadingLocation" class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+        </button>
+    </div>
+
     <div class="absolute bottom-32 right-4 z-[500]">
         <button @click="resetMap()" class="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
         </button>
     </div>
 
-    <div 
+    <div
         class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[600] transition-transform duration-300 ease-in-out transform"
         :class="detailOpen ? 'translate-y-0 h-[65vh]' : 'translate-y-[calc(100%-80px)] h-auto'"
     >
@@ -39,7 +58,7 @@
         </div>
 
         <div class="p-6 h-full overflow-y-auto pb-20">
-            
+
             @if($selectedHotspot)
                 <button wire:click="clearSelection" @click="detailOpen = true" class="text-xs text-emerald-600 font-bold mb-4 flex items-center hover:underline">
                     ← OVERVIEW
@@ -135,12 +154,12 @@
                 </div>
 
                 <h4 class="text-xs font-bold text-gray-400 uppercase mb-3 tracking-widest">Affected Areas</h4>
-                
+
                 <div class="space-y-3">
                     @foreach($hotspots as $spot)
                     <div wire:click="selectHotspot({{ $spot->id }})" @click="detailOpen = true" class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl shadow-sm cursor-pointer hover:bg-gray-50 transition group">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 transition-colors" 
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 transition-colors"
                                  style="background-color: {{ $spot->status === 'flooded' ? '#FEE2E2' : ($spot->status === 'moderate' ? '#FEF3C7' : '#D1FAE5') }}">
                                 <div class="w-3 h-3 rounded-full shadow-sm" style="background-color: {{ $spot->color }}"></div>
                             </div>
@@ -191,10 +210,11 @@
         return {
             map: null,
             detailOpen: false,
-            
+            loadingLocation: false,
+
             init() {
                 this.initMap();
-                
+
                 // Listen for Livewire events to update map dynamically
                 Livewire.on('hotspotsUpdated', () => {
                     // Logic to re-render markers if needed (advanced)
@@ -205,7 +225,7 @@
             initMap() {
                 // Initialize Leaflet
                 // Centered on Naga City
-                this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14); 
+                this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14);
 
                 // Clean Map Style
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -215,7 +235,7 @@
 
                 // Load Data
                 const locations = @json($hotspots);
-                
+
                 locations.forEach(loc => {
                     // Determine Color (using the logic from your Model or JS fallback)
                     let color = '#10B981'; // Green default
@@ -238,6 +258,67 @@
                     });
                 });
             },
+
+
+            locateMe() {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser");
+                    return;
+                }
+
+                this.loadingLocation = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+
+                        // 1. Remove old marker
+                        if (this.userMarker) {
+                            this.map.removeLayer(this.userMarker);
+                        }
+
+                        // 2. Create Marker using TAILWIND HTML
+                        const userIcon = L.divIcon({
+                            // Override default Leaflet styles to remove the white square
+                            className: '!bg-transparent !border-0',
+
+                            // The Marker HTML: A solid dot with a "pinging" ring behind it
+                            html: `
+                                <div class="relative flex items-center justify-center w-full h-full">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-blue-600 border-2 border-white shadow-sm"></span>
+                                </div>
+                            `,
+                            iconSize: [24, 24], // Size of the container
+                            iconAnchor: [12, 12] // Center the icon (half of size)
+                        });
+
+                        // 3. Add to map
+                        this.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(this.map);
+
+                        // 4. Fly to user
+                        this.map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
+
+                        // 5. Popup info
+                        this.userMarker.bindPopup(`
+                            <div class="text-center">
+                                <div class="font-bold text-gray-800">You are here</div>
+                                <div class="text-xs text-gray-500">Accuracy: ${Math.round(accuracy)}m</div>
+                            </div>
+                        `).openPopup();
+
+                        this.loadingLocation = false;
+                    },
+                    (error) => {
+                        this.loadingLocation = false;
+                        console.error(error);
+                        alert("Could not get location. Ensure GPS is on and HTTPS is used.");
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
 
             resetMap() {
                 this.map.flyTo([13.621775, 123.194830], 14, {
