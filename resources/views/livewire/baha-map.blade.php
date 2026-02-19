@@ -51,7 +51,7 @@
 
     <div
         class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[600] transition-transform duration-300 ease-in-out transform"
-        :class="detailOpen ? 'translate-y-0 h-[65vh]' : 'translate-y-[calc(100%-80px)] h-auto'"
+        :class="detailOpen ? 'translate-y-0 h-[65vh]' : 'translate-y-[calc(100%-110px)] h-[65vh]'"
     >
         <div class="w-full flex justify-center pt-3 pb-1 cursor-pointer" @click="detailOpen = !detailOpen">
             <div class="w-12 h-1.5 bg-gray-200 rounded-full"></div>
