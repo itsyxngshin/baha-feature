@@ -7,7 +7,7 @@
         <div class="bg-white rounded-xl shadow-lg flex items-center p-3">
             <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             <input wire:model.live="searchQuery" type="text" placeholder="Search destination in Naga..." class="w-full outline-none text-gray-700 placeholder-gray-400 text-sm">
-            
+
             @if(strlen($searchQuery) > 0)
             <button wire:click="$set('searchQuery', '')" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -18,7 +18,7 @@
         @if(strlen($searchQuery) > 0 && isset($filteredHotspots))
         <div class="mt-2 bg-white rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto border border-gray-100">
             @forelse($filteredHotspots as $spot)
-                <div 
+                <div
                     wire:click="selectHotspot({{ $spot->id }}); $set('searchQuery', '')"
                     @click="detailOpen = true; map.flyTo([{{ $spot->latitude }}, {{ $spot->longitude }}], 16, {animate: true, duration: 1});"
                     class="p-4 border-b border-gray-50 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition group"
@@ -170,8 +170,6 @@
             },
 
             initMap() {
-                if(this.map) return; // Prevent double initialization
-                
                 this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14);
 
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -182,42 +180,47 @@
                 const locations = @json($hotspots);
 
                 locations.forEach(loc => {
-                    // GLOWING NEON MARKERS
+                    // 1. SET GLOW COLORS & INTENSITY BASED ON STATUS
                     let colorClass = 'bg-emerald-500';
-                    let shadowClass = 'shadow-[0_0_20px_rgba(16,185,129,0.8)]';
+                    let shadowClass = 'shadow-[0_0_20px_rgba(16,185,129,0.8)]'; // Green Glow
                     let ringClass = 'border-emerald-300';
 
                     if(loc.status === 'flooded') {
                         colorClass = 'bg-red-600';
-                        shadowClass = 'shadow-[0_0_30px_rgba(220,38,38,1)]';
+                        shadowClass = 'shadow-[0_0_35px_rgba(220,38,38,1)]'; // Intense Red Glow
                         ringClass = 'border-red-400';
                     } else if(loc.status === 'moderate') {
                         colorClass = 'bg-amber-500';
-                        shadowClass = 'shadow-[0_0_20px_rgba(245,158,11,0.8)]';
+                        shadowClass = 'shadow-[0_0_25px_rgba(245,158,11,0.8)]'; // Amber Glow
                         ringClass = 'border-amber-300';
                     }
 
+                    // 2. CREATE THE GLOWING HTML MARKER
                     const glowIcon = L.divIcon({
-                        className: '!bg-transparent !border-0',
+                        className: '!bg-transparent !border-0', // Remove Leaflet's default white box
                         html: `
-                            <div class="relative flex items-center justify-center w-10 h-10">
-                                <div class="absolute w-full h-full rounded-full opacity-60 animate-pulse ${colorClass} ${shadowClass}"></div>
+                            <div class="relative flex items-center justify-center w-12 h-12 cursor-pointer group">
+                                <div class="absolute w-full h-full rounded-full opacity-60 animate-pulse ${colorClass} ${shadowClass} group-hover:opacity-100 transition-opacity"></div>
+
                                 <div class="relative w-4 h-4 rounded-full border-2 border-white ${colorClass} z-10"></div>
+
                                 <div class="absolute w-full h-full rounded-full border-2 ${ringClass} opacity-40 animate-ping"></div>
                             </div>
                         `,
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 20]
+                        iconSize: [48, 48],   // Provide a large clickable area
+                        iconAnchor: [24, 24]  // Center the icon mathematically
                     });
 
+                    // 3. ADD TO MAP
                     const marker = L.marker([loc.latitude, loc.longitude], { icon: glowIcon }).addTo(this.map);
 
+                    // 4. BIND CLICK EVENT
                     marker.on('click', () => {
                         this.$wire.selectHotspot(loc.id);
-                        this.detailOpen = true; 
+                        this.detailOpen = true;
                     });
                 });
-            },
+            }
 
             locateMe() {
                 if (!navigator.geolocation) return alert("Geolocation is not supported by your browser");
