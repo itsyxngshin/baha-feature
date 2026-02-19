@@ -105,16 +105,41 @@
                         const lat = e.latlng.lat.toFixed(6);
                         const lng = e.latlng.lng.toFixed(6);
 
-                        // 1. Set Coordinates in Livewire
-                        this.$wire.set('latitude', lat);
-                        this.$wire.set('longitude', lng);
-
-                        // 2. Move or Create Marker
+                        // 1. VISUALLY DROP THE PIN FIRST (Fixes the invisible marker bug)
                         if (this.marker) {
                             this.marker.setLatLng(e.latlng);
                         } else {
-                            this.marker = L.marker(e.latlng, { draggable: true }).addTo(this.map);
+                            // Custom Tailwind SVG Pin
+                            const customPin = L.divIcon({
+                                className: '!bg-transparent !border-0',
+                                html: `
+                                    <div class="relative flex items-center justify-center -mt-8 shadow-sm">
+                                        <svg class="w-10 h-10 text-emerald-600 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                        </svg>
+                                    </div>
+                                `,
+                                iconSize: [40, 40],
+                                iconAnchor: [20, 40] // Anchors the exact bottom tip of the pin to the click point
+                            });
+
+                            this.marker = L.marker(e.latlng, { icon: customPin, draggable: true }).addTo(this.map);
+
+                            // ALLOW DRAGGING TO ADJUST LOCATION
+                            this.marker.on('dragend', (event) => {
+                                const pos = event.target.getLatLng();
+                                const dragLat = pos.lat.toFixed(6);
+                                const dragLng = pos.lng.toFixed(6);
+
+                                this.$wire.set('latitude', dragLat);
+                                this.$wire.set('longitude', dragLng);
+                                this.fetchRoadName(dragLat, dragLng);
+                            });
                         }
+
+                        // 2. TELL LIVEWIRE TO UPDATE TEXT BOXES
+                        this.$wire.set('latitude', lat);
+                        this.$wire.set('longitude', lng);
 
                         // 3. AUTO-IDENTIFY ROAD NAME
                         this.fetchRoadName(lat, lng);
