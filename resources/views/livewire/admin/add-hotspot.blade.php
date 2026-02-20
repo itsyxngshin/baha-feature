@@ -1,7 +1,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6" x-data="adminMap($wire)">
+<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6" x-data="adminMap()">
 
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[80vh]">
 
@@ -20,10 +21,10 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Road / Zone Name</label>
                     <div class="relative">
-                        <input 
-                            wire:model="name" 
-                            type="text" 
-                            :placeholder="isFetching ? 'Locating road...' : 'e.g. Roxas Avenue (North)'" 
+                        <input
+                            wire:model="name"
+                            type="text"
+                            :placeholder="isFetching ? 'Locating road...' : 'e.g. Roxas Avenue (North)'"
                             :disabled="isFetching"
                             class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
                         >
@@ -82,26 +83,18 @@
 
     </div>
 </div>
-
 <script>
-    // Accept $wire as a parameter
-    function adminMap($wire) {
+    function adminMap() {
         return {
             map: null,
             marker: null,
             isFetching: false,
 
             init() {
-                // Small timeout ensures the DOM is ready for Leaflet
                 setTimeout(() => {
                     this.map = L.map('admin-map').setView([13.621775, 123.194830], 14);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(this.map);
 
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; OpenStreetMap',
-                        maxZoom: 20
-                    }).addTo(this.map);
-
-                    // CLICK EVENT
                     this.map.on('click', async (e) => {
                         const lat = e.latlng.lat.toFixed(6);
                         const lng = e.latlng.lng.toFixed(6);
@@ -109,67 +102,51 @@
                         if (this.marker) {
                             this.marker.setLatLng(e.latlng);
                         } else {
-                            // Custom Tailwind SVG Pin
                             const customPin = L.divIcon({
                                 className: '!bg-transparent !border-0',
-                                html: `
-                                    <div class="relative flex items-center justify-center -mt-8 shadow-sm">
-                                        <svg class="w-10 h-10 text-emerald-600 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                                        </svg>
-                                    </div>
-                                `,
-                                iconSize: [40, 40],
-                                iconAnchor: [20, 40] 
+                                html: `<div class="relative flex items-center justify-center -mt-8"><svg class="w-10 h-10 text-emerald-600 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>`,
+                                iconSize: [40, 40], iconAnchor: [20, 40]
                             });
 
                             this.marker = L.marker(e.latlng, { icon: customPin, draggable: true }).addTo(this.map);
 
-                            // DRAG EVENT
                             this.marker.on('dragend', (event) => {
                                 const pos = event.target.getLatLng();
                                 const dragLat = pos.lat.toFixed(6);
                                 const dragLng = pos.lng.toFixed(6);
-                                
-                                // Direct $wire call
-                                $wire.set('latitude', dragLat);
-                                $wire.set('longitude', dragLng);
+
+                                // Bulletproof Livewire Update
+                                @this.set('latitude', dragLat);
+                                @this.set('longitude', dragLng);
                                 this.fetchRoadName(dragLat, dragLng);
                             });
                         }
 
-                        // Direct $wire call
-                        $wire.set('latitude', lat);
-                        $wire.set('longitude', lng);
-
+                        // Bulletproof Livewire Update
+                        @this.set('latitude', lat);
+                        @this.set('longitude', lng);
                         this.fetchRoadName(lat, lng);
                     });
-                }, 100);
+                }, 200);
             },
 
             async fetchRoadName(lat, lng) {
                 this.isFetching = true;
-
                 try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-                        headers: { 'Accept-Language': 'en' }
-                    });
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, { headers: { 'Accept-Language': 'en' } });
                     const data = await response.json();
 
                     if (data && data.address) {
                         const road = data.address.road || data.address.pedestrian || data.address.suburb || "Unnamed Area";
                         const area = data.address.neighbourhood || data.address.city || "";
-
                         const fullName = area ? `${road}, ${area}` : road;
 
-                        $wire.set('name', fullName);
+                        @this.set('name', fullName);
                     } else {
-                        $wire.set('name', "Unknown Location");
+                        @this.set('name', "Unknown Location");
                     }
                 } catch (error) {
-                    console.error("Could not find road name", error);
-                    // Fallback so you aren't stuck if the API fails
-                    $wire.set('name', "Map Clicked (Name Unavailable)");
+                    @this.set('name', "Map Clicked (Name Unavailable)");
                 } finally {
                     this.isFetching = false;
                 }
@@ -181,23 +158,12 @@
 <script>
     document.addEventListener('livewire:initialized', () => {
         Livewire.on('road-saved', () => {
-            // 1. Show Success Toast (If SweetAlert is globally available, else fallback)
             if(typeof Swal !== 'undefined') {
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Road Added!',
-                    text: 'Elevation data will be auto-fetched.',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#ECFDF5', 
-                    color: '#065F46' 
+                    icon: 'success', title: 'Road Added!', toast: true, position: 'top-end',
+                    showConfirmButton: false, timer: 3000, background: '#ECFDF5', color: '#065F46'
                 });
             }
-
-            // 2. Clear the Map Pin
             const mapComponent = document.querySelector('[x-data]').__x.$data;
             if(mapComponent && mapComponent.marker) {
                 mapComponent.map.removeLayer(mapComponent.marker);
