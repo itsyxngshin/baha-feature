@@ -9,14 +9,10 @@ use Livewire\Attributes\Layout;
 #[Layout('layouts.app')]
 class BahaMap extends Component
 {
-    // 1. STRONGLY TYPE the model so Livewire knows how to hydrate it.
-    // Notice the "?Hotspot" (which means it can be a Hotspot model or null).
     public ?Hotspot $selectedHotspot = null;
 
     public $searchQuery = '';
 
-    // Notice we completely REMOVED public $hotspots and the mount() function.
-    // This stops Livewire from sending massive data payloads back and forth!
 
     public function selectHotspot($id)
     {
@@ -33,7 +29,6 @@ class BahaMap extends Component
     {
         return view('livewire.baha-map', [
             // 2. PASS HOTSPOTS DIRECTLY HERE.
-            // This renders the map markers perfectly without bloating the Livewire state.
             'hotspots' => Hotspot::all(),
 
             'filteredHotspots' => strlen($this->searchQuery) > 0
