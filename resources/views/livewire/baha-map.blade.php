@@ -1,74 +1,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<div class="relative h-screen w-full overflow-hidden bg-gray-100 font-sans"
-     x-data="{
-        map: null,
-        userMarker: null,
-        detailOpen: false,
-        loadingLocation: false,
-
-        initMap() {
-            if(this.map) return;
-
-            this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(this.map);
-
-            const locations = @json($hotspots);
-
-            locations.forEach(loc => {
-                if (!loc.latitude || !loc.longitude) return;
-
-                let colorClass = loc.status === 'flooded' ? 'bg-red-600' : (loc.status === 'moderate' ? 'bg-amber-500' : 'bg-emerald-500');
-                let shadowClass = loc.status === 'flooded' ? 'shadow-[0_0_30px_rgba(220,38,38,1)]' : (loc.status === 'moderate' ? 'shadow-[0_0_20px_rgba(245,158,11,0.8)]' : 'shadow-[0_0_20px_rgba(16,185,129,0.8)]');
-
-                const glowIcon = L.divIcon({
-                    className: '!bg-transparent !border-0',
-                    html: `<div class='relative flex items-center justify-center w-10 h-10'><div class='absolute w-full h-full rounded-full opacity-60 animate-pulse ${colorClass} ${shadowClass}'></div><div class='relative w-4 h-4 rounded-full border-2 border-white ${colorClass} z-10'></div></div>`,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
-                });
-
-                const marker = L.marker([loc.latitude, loc.longitude], { icon: glowIcon }).addTo(this.map);
-
-                // BULLETPROOF LIVEWIRE CONNECTION
-                marker.on('click', async () => {
-                    // Tell PHP to fetch the exact hotspot data
-                    await this.$wire.selectHotspot(loc.id);
-                    // Slide the panel up
-                    this.detailOpen = true;
-                });
-            });
-        },
-
-        locateMe() {
-            if (!navigator.geolocation) return alert('Geolocation is not supported');
-            this.loadingLocation = true;
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    if (this.userMarker) this.map.removeLayer(this.userMarker);
-                    const userIcon = L.divIcon({
-                        className: '!bg-transparent !border-0',
-                        html: `<div class='relative flex items-center justify-center w-6 h-6'><span class='absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping'></span><span class='relative inline-flex rounded-full h-4 w-4 bg-blue-600 border-2 border-white shadow-sm'></span></div>`,
-                        iconSize: [24, 24], iconAnchor: [12, 12]
-                    });
-                    this.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(this.map);
-                    this.map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
-                    this.loadingLocation = false;
-                },
-                () => { this.loadingLocation = false; alert('Location failed.'); },
-                { enableHighAccuracy: true }
-            );
-        },
-
-        resetMap() {
-            this.map.flyTo([13.621775, 123.194830], 14, { animate: true, duration: 1.5 });
-        }
-     }"
-     x-init="$nextTick(() => { initMap() })"
->
+<div class="relative h-screen w-full overflow-hidden bg-gray-100 font-sans" x-data="bahaMap">
 
     <div class="absolute top-6 left-4 right-4 z-[500]">
         <div class="bg-white rounded-xl shadow-lg flex items-center p-3">
@@ -84,8 +17,14 @@
         @if(strlen($searchQuery) > 0 && isset($filteredHotspots))
         <div class="mt-2 bg-white rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto border border-gray-100">
             @forelse($filteredHotspots as $spot)
-                <div wire:click="selectHotspot({{ $spot->id }}); $set('searchQuery', '')" @click="detailOpen = true; map.flyTo([{{ $spot->latitude ?? 13.621775 }}, {{ $spot->longitude ?? 123.194830 }}], 16, {animate: true, duration: 1});" class="p-4 border-b border-gray-50 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition">
-                    <span class="text-sm font-bold text-gray-700">{{ $spot->name }}</span>
+                <div
+                    wire:click="selectHotspot({{ $spot->id }}); $set('searchQuery', '')"
+                    @click="detailOpen = true; map.flyTo([{{ $spot->latitude ?? 13.621775 }}, {{ $spot->longitude ?? 123.194830 }}], 16, {animate: true, duration: 1});"
+                    class="p-4 border-b border-gray-50 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition group"
+                >
+                    <div class="flex items-center">
+                        <span class="text-sm font-bold text-gray-700">{{ $spot->name }}</span>
+                    </div>
                     <span class="text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider bg-gray-100 text-gray-600">{{ $spot->status }}</span>
                 </div>
             @empty
@@ -107,13 +46,16 @@
     </div>
 
     <div class="absolute bottom-48 right-4 z-[500]">
-        <button @click="locateMe()" class="bg-white text-gray-600 hover:text-blue-600 p-3 rounded-xl shadow-lg flex items-center justify-center">
+        <button @click="locateMe()" class="bg-white text-gray-600 hover:text-blue-600 p-3 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center group" :class="loadingLocation ? 'cursor-wait' : ''">
             <svg x-show="loadingLocation" class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <svg x-show="!loadingLocation" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <svg x-show="!loadingLocation" class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
     </div>
+
     <div class="absolute bottom-32 right-4 z-[500]">
-        <button @click="resetMap()" class="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></button>
+        <button @click="resetMap()" class="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+        </button>
     </div>
 
     <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] z-[600] transition-transform duration-300 ease-out transform h-[65vh]" :class="detailOpen ? 'translate-y-0' : 'translate-y-[calc(100%-110px)]'">
@@ -123,8 +65,7 @@
 
         <div class="px-6 pb-24 h-full overflow-y-auto">
             @if($selectedHotspot)
-                <button wire:click="clearSelection" @click="detailOpen = false" class="text-xs text-emerald-600 font-bold mb-4 flex items-center hover:underline">← OVERVIEW</button>
-
+                <button wire:click="clearSelection" @click="detailOpen = true" class="text-xs text-emerald-600 font-bold mb-4 flex items-center hover:underline">← OVERVIEW</button>
                 <div class="flex justify-between items-start mb-4">
                     <h2 class="text-2xl font-bold text-gray-800 leading-tight">{{ $selectedHotspot->name }} <br> Hotspot</h2>
                     <div class="text-right">
@@ -194,3 +135,96 @@
         </div>
     </div>
 </div>
+
+<script data-navigate-once>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('bahaMap', () => ({
+            map: null,
+            userMarker: null,
+            detailOpen: false,
+            loadingLocation: false,
+
+            init() {
+                // Ensure the DOM is fully loaded before initializing Leaflet
+                this.$nextTick(() => {
+                    this.initMap();
+                });
+            },
+
+            initMap() {
+                if(this.map) return;
+
+                this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(this.map);
+
+                const locations = @json($hotspots);
+
+                locations.forEach(loc => {
+                    // FATAL ERROR PROTECTION: Skip any data from the database missing coordinates
+                    if (!loc.latitude || !loc.longitude) {
+                        console.warn(`Skipping hotspot "${loc.name}" due to missing coordinates.`);
+                        return;
+                    }
+
+                    let colorClass = loc.status === 'flooded' ? 'bg-red-600' : (loc.status === 'moderate' ? 'bg-amber-500' : 'bg-emerald-500');
+                    let shadowClass = loc.status === 'flooded' ? 'shadow-[0_0_30px_rgba(220,38,38,1)]' : (loc.status === 'moderate' ? 'shadow-[0_0_20px_rgba(245,158,11,0.8)]' : 'shadow-[0_0_20px_rgba(16,185,129,0.8)]');
+
+                    const glowIcon = L.divIcon({
+                        className: '!bg-transparent !border-0',
+                        html: `<div class="relative flex items-center justify-center w-10 h-10"><div class="absolute w-full h-full rounded-full opacity-60 animate-pulse ${colorClass} ${shadowClass}"></div><div class="relative w-4 h-4 rounded-full border-2 border-white ${colorClass} z-10"></div></div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    });
+
+                    const marker = L.marker([loc.latitude, loc.longitude], { icon: glowIcon }).addTo(this.map);
+
+                    marker.on('click', async () => {
+                        // Tell Livewire to fetch the data, THEN open the bottom sheet
+                        await this.$wire.selectHotspot(loc.id);
+                        this.detailOpen = true;
+                    });
+                });
+            },
+
+            locateMe() {
+                if (!navigator.geolocation) return alert("Geolocation is not supported by your browser");
+
+                this.loadingLocation = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        if (this.userMarker) this.map.removeLayer(this.userMarker);
+
+                        const userIcon = L.divIcon({
+                            className: '!bg-transparent !border-0',
+                            html: `
+                                <div class="relative flex items-center justify-center w-6 h-6">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-blue-600 border-2 border-white shadow-sm"></span>
+                                </div>
+                            `,
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 12]
+                        });
+
+                        this.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(this.map);
+                        this.map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
+                        this.loadingLocation = false;
+                    },
+                    (error) => {
+                        this.loadingLocation = false;
+                        alert("Could not get location. Ensure GPS is enabled.");
+                    },
+                    { enableHighAccuracy: true }
+                );
+            },
+
+            resetMap() {
+                this.map.flyTo([13.621775, 123.194830], 14, { animate: true, duration: 1.5 });
+            }
+        }));
+    });
+</script>
