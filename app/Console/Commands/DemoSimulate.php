@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Hotspot;
 use App\Services\FloodPredictionService;
 
-class SimulateFlood extends Command
+class DemoSimulate extends Command
 {
     protected $signature = 'baha:simulate {intensity=heavy}';
     protected $description = 'Inject synthetic rainfall to simulate flooding';

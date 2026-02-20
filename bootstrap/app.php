@@ -17,5 +17,5 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withCommands([
-        \App\Console\Commands\SimulateFlood::class,
+        \App\Console\Commands\DemoSimulate::class, 
     ])->create();
