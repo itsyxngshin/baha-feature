@@ -9,16 +9,21 @@ use Livewire\Attributes\Layout;
 #[Layout('layouts.app')]
 class AddHotspot extends Component
 {
-    public $name, $latitude, $longitude, $elevation_m, $drainage_level;
+    public $name;
+    public $latitude;
+    public $longitude;
+    public $drainage_level = 5; // Default middle value
+
+    protected $rules = [
+        'name' => 'required|min:3',
+        'latitude' => 'required|numeric',
+        'longitude' => 'required|numeric',
+        'drainage_level' => 'required|integer|min:1|max:10',
+    ];
 
     public function save()
     {
-        $this->validate([
-            'name' => 'required|string',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'drainage_level' => 'required|integer|min:1|max:10',
-        ]);
+        $this->validate();
 
         Hotspot::create([
             'name' => $this->name,
@@ -31,10 +36,10 @@ class AddHotspot extends Component
             'status' => 'clear'
         ]);
 
-        $this->reset(); 
+        $this->reset(['name', 'latitude', 'longitude', 'drainage_level']);
+        $this->drainage_level = 5; // Reset to default
 
-        // TRIGGER THE TOAST
-        $this->dispatch('road-saved'); 
+        $this->dispatch('road-saved');
     }
 
     public function render()
