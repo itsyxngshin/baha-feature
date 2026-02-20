@@ -178,9 +178,9 @@
 
                     const marker = L.marker([loc.latitude, loc.longitude], { icon: glowIcon }).addTo(this.map);
 
-                    marker.on('click', () => {
-                        // Use native Blade integration to securely contact the Livewire component
-                        @this.selectHotspot(loc.id);
+                    marker.on('click', async () => {
+                        // Tell Livewire to fetch the data, THEN open the bottom sheet
+                        await this.$wire.selectHotspot(loc.id);
                         this.detailOpen = true;
                     });
                 });
