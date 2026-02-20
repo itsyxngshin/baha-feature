@@ -3,14 +3,14 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <div id="map" wire:ignore class="absolute inset-0 z-0"></div>
+    <div id="map" wire:ignore class="absolute inset-0 z-0 bg-[#242424]"></div>
 
     <div class="absolute top-6 left-4 right-4 z-[500]">
         <div class="bg-white rounded-xl shadow-lg flex items-center p-3 border border-gray-100">
             <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             <input wire:model.live="searchQuery" type="text" placeholder="Search destination in Naga..." class="w-full outline-none text-gray-700 text-sm">
             @if(strlen($searchQuery) > 0)
-                <button wire:click="$set('searchQuery', '')" class="text-gray-400 hover:text-gray-600">
+                <button wire:click="$set('searchQuery', '')" class="text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             @endif
@@ -21,9 +21,9 @@
             @forelse($filteredHotspots as $spot)
                 <div wire:click="selectHotspot({{ $spot->id }}); $set('searchQuery', '')"
                     @click="detailOpen = true; map.flyTo([{{ $spot->latitude }}, {{ $spot->longitude }}], 16);"
-                    class="p-4 border-b border-gray-50 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition group"
+                    class="p-4 border-b border-gray-50 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition"
                 >
-                    <span class="text-sm font-bold text-gray-700 group-hover:text-emerald-700">{{ $spot->name }}</span>
+                    <span class="text-sm font-bold text-gray-700">{{ $spot->name }}</span>
                     <span class="text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider bg-gray-100 text-gray-600">{{ $spot->status }}</span>
                 </div>
             @empty
@@ -43,11 +43,11 @@
     </div>
 
     <div class="absolute bottom-32 right-4 z-[500] flex flex-col gap-3">
-        <button @click="locateMe()" class="bg-white text-gray-600 p-3 rounded-xl shadow-lg hover:text-blue-600 transition active:scale-90" :title="'My Location'">
-            <svg x-show="!loadingLocation" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <button @click="locateMe()" class="bg-white text-gray-600 p-3 rounded-xl shadow-lg active:scale-90">
+            <svg x-show="!loadingLocation" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
             <svg x-show="loadingLocation" class="animate-spin h-6 w-6 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         </button>
-        <button @click="resetMap()" class="bg-emerald-500 text-white p-3 rounded-xl shadow-lg hover:bg-emerald-600 transition active:scale-90" :title="'Reset View'">
+        <button @click="resetMap()" class="bg-emerald-500 text-white p-3 rounded-xl shadow-lg active:scale-90">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
         </button>
     </div>
@@ -62,7 +62,7 @@
         <div class="px-6 pb-24 h-full overflow-y-auto">
             <div wire:loading wire:target="selectHotspot" class="flex flex-col items-center justify-center py-12">
                 <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
-                <p class="text-xs font-bold text-gray-400 mt-4 uppercase tracking-widest">Updating View...</p>
+                <p class="text-xs font-bold text-gray-400 mt-4 uppercase tracking-widest">Analyzing Zone Data...</p>
             </div>
 
             <div wire:loading.remove wire:target="selectHotspot">
@@ -77,19 +77,9 @@
                     <div class="flex justify-between items-start mb-4">
                         <h2 class="text-2xl font-bold text-gray-800 leading-tight">{{ $selectedHotspot->name }}</h2>
                         <div class="text-right">
-                            <span class="block text-3xl font-black text-gray-800">{{ round($selectedHotspot->water_level_cm) }}<small class="text-sm font-normal text-gray-400 ml-0.5">cm</small></span>
+                            <span class="block text-3xl font-black text-emerald-600">{{ round($selectedHotspot->water_level_cm) }}<small class="text-sm font-normal text-gray-400 ml-0.5">cm</small></span>
                             <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Water Level</span>
                         </div>
-                    </div>
-
-                    <div class="mb-6">
-                        @if($selectedHotspot->status === 'flooded')
-                            <span class="px-3 py-1 bg-red-100 text-red-600 text-[10px] font-bold rounded-full">ⓧ IMPASSABLE</span>
-                        @elseif($selectedHotspot->status === 'moderate')
-                            <span class="px-3 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded-full">⚠ CAUTION</span>
-                        @else
-                            <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-bold rounded-full">✓ PASSABLE</span>
-                        @endif
                     </div>
 
                     <div class="mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
@@ -99,22 +89,16 @@
 
                     <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                            <div class="flex justify-between items-start mb-1 text-blue-500">
-                                <span class="text-xl">💧</span>
-                                <span class="text-[9px] font-bold uppercase">Current</span>
-                            </div>
+                            <span class="text-[9px] font-bold uppercase text-blue-400 block mb-1">Current Rain</span>
                             <div class="text-lg font-bold text-blue-900">{{ number_format($selectedHotspot->rainfall_mm_hr, 1) }} mm</div>
                         </div>
                         <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                            <div class="flex justify-between items-start mb-1 text-indigo-500">
-                                <span class="text-xl">☁️</span>
-                                <span class="text-[9px] font-bold uppercase">Previous</span>
-                            </div>
+                            <span class="text-[9px] font-bold uppercase text-indigo-400 block mb-1">Prev Rain</span>
                             <div class="text-lg font-bold text-indigo-900">{{ number_format($selectedHotspot->previous_rainfall_mm, 1) }} mm</div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-sm">
+                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-4">
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">⛰ Elevation</span>
                             <span class="font-bold text-gray-800">{{ $selectedHotspot->elevation_m ?? 5.0 }}m ASL</span>
@@ -124,7 +108,7 @@
                                 <span class="text-gray-500 font-medium">🛤 Drainage Quality</span>
                                 <span class="font-bold text-gray-800">{{ $selectedHotspot->drainage_level }}/10</span>
                             </div>
-                            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                                 <div class="h-full bg-emerald-500" style="width: {{ ($selectedHotspot->drainage_level / 10) * 100 }}%"></div>
                             </div>
                         </div>
@@ -137,7 +121,7 @@
                              @click="detailOpen = true; map.flyTo([{{ $spot->latitude }}, {{ $spot->longitude }}], 16)" 
                              class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl hover:bg-emerald-50 transition cursor-pointer bg-white">
                             <div class="flex items-center gap-3">
-                                <div class="w-2.5 h-2.5 rounded-full {{ $spot->status === 'flooded' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : ($spot->status === 'moderate' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-emerald-500 shadow-[0_0_8px_#10b981]') }}"></div>
+                                <div class="w-2.5 h-2.5 rounded-full {{ $spot->status === 'flooded' ? 'bg-red-500' : ($spot->status === 'moderate' ? 'bg-amber-500' : 'bg-emerald-500') }}"></div>
                                 <span class="text-sm font-bold text-gray-700">{{ $spot->name }}</span>
                             </div>
                             <span class="text-xs font-bold text-gray-400">{{ round($spot->water_level_cm) }}cm</span>
@@ -160,18 +144,45 @@
 
             init() {
                 this.$nextTick(() => { this.initMap(); });
-
-                // Event listener for Chart update
-                $wire.on('hotspot-selected', (event) => {
-                    this.renderChart(event.prev, event.curr);
-                });
+                $wire.on('hotspot-selected', (event) => { this.renderChart(event.prev, event.curr); });
             },
 
             initMap() {
                 if(this.map) return;
-                this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14);
+
+                // 1. Define Naga Boundary (Simplified box/polygon)
+                const nagaBoundary = [
+                    [13.6800, 123.1400], [13.6800, 123.2700],
+                    [13.5600, 123.2700], [13.5600, 123.1400]
+                ];
+
+                // 2. Giant World Rectangle
+                const worldMask = [
+                    [-90, -180], [-90, 180], [90, 180], [90, -180]
+                ];
+
+                // 3. Set Max Bounds for Pan restriction
+                const bounds = L.latLngBounds([13.55, 123.12], [13.69, 123.28]);
+
+                this.map = L.map('map', { 
+                    zoomControl: false,
+                    maxBounds: bounds,
+                    maxBoundsViscosity: 1.0,
+                    minZoom: 13
+                }).setView([13.621775, 123.194830], 14);
+
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(this.map);
 
+                // 4. ADD THE DARK MASK (Everything outside Naga)
+                L.polygon([worldMask, nagaBoundary], {
+                    color: '#000',
+                    fillColor: '#000',
+                    fillOpacity: 0.6,
+                    weight: 0,
+                    interactive: false
+                }).addTo(this.map);
+
+                // Add Markers
                 const locations = @json($hotspots);
                 locations.forEach(loc => {
                     let color = loc.status === 'flooded' ? 'bg-red-600' : (loc.status === 'moderate' ? 'bg-amber-500' : 'bg-emerald-500');
@@ -181,12 +192,12 @@
                         iconSize: [40, 40], iconAnchor: [20, 20]
                     });
 
-                    const marker = L.marker([loc.latitude, loc.longitude], { icon: icon }).addTo(this.map);
-                    marker.on('click', async () => {
-                        this.map.flyTo([loc.latitude, loc.longitude], 16);
-                        await $wire.selectHotspot(loc.id);
-                        this.detailOpen = true;
-                    });
+                    L.marker([loc.latitude, loc.longitude], { icon: icon }).addTo(this.map)
+                        .on('click', async () => {
+                            this.map.flyTo([loc.latitude, loc.longitude], 16);
+                            await $wire.selectHotspot(loc.id);
+                            this.detailOpen = true;
+                        });
                 });
             },
 
@@ -194,44 +205,29 @@
                 const ctx = document.getElementById('floodChart');
                 if (!ctx) return;
                 if (this.chart) this.chart.destroy();
-
                 this.chart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['Previous Hr', 'Current Hr'],
-                        datasets: [{
-                            data: [prev, curr],
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#fff'
-                        }]
+                        labels: ['Previous', 'Current'],
+                        datasets: [{ data: [prev, curr], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, ticks: { font: { size: 9 } } } }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
                 });
             },
 
             locateMe() {
-                if (!navigator.geolocation) return alert("Geolocation not supported");
                 this.loadingLocation = true;
                 navigator.geolocation.getCurrentPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
                     if (this.userMarker) this.map.removeLayer(this.userMarker);
-                    this.userMarker = L.circleMarker([latitude, longitude], { color: '#3b82f6', fillOpacity: 0.8, radius: 8 }).addTo(this.map);
+                    this.userMarker = L.circleMarker([latitude, longitude], { color: '#3b82f6', radius: 8 }).addTo(this.map);
                     this.map.flyTo([latitude, longitude], 17);
                     this.loadingLocation = false;
-                }, () => { this.loadingLocation = false; alert("GPS access denied."); });
+                }, () => { this.loadingLocation = false; });
             },
 
             resetMap() { 
-                this.map.flyTo([13.621775, 123.194830], 14); 
+                this.map.setView([13.621775, 123.194830], 14); 
                 this.detailOpen = false;
                 $wire.clearSelection();
             }
