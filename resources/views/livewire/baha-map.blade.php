@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<div class="relative h-screen w-full overflow-hidden bg-gray-100 font-sans" x-data="mapHandler()" x-init="setup($wire)">
+<div class="relative h-screen w-full overflow-hidden bg-gray-100 font-sans" x-data="bahaMap">
 
     <div class="absolute top-6 left-4 right-4 z-[500]">
         <div class="bg-white rounded-xl shadow-lg flex items-center p-3">
@@ -19,7 +19,7 @@
             @forelse($filteredHotspots as $spot)
                 <div
                     wire:click="selectHotspot({{ $spot->id }}); $set('searchQuery', '')"
-                    @click="detailOpen = true; map.flyTo([{{ $spot->latitude }}, {{ $spot->longitude }}], 16, {animate: true, duration: 1});"
+                    @click="detailOpen = true; map.flyTo([{{ $spot->latitude ?? 13.621775 }}, {{ $spot->longitude ?? 123.194830 }}], 16, {animate: true, duration: 1});"
                     class="p-4 border-b border-gray-50 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition group"
                 >
                     <div class="flex items-center">
@@ -47,14 +47,8 @@
 
     <div class="absolute bottom-48 right-4 z-[500]">
         <button @click="locateMe()" class="bg-white text-gray-600 hover:text-blue-600 p-3 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center group" :class="loadingLocation ? 'cursor-wait' : ''">
-            <svg x-show="loadingLocation" class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <svg x-show="!loadingLocation" class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
+            <svg x-show="loadingLocation" class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <svg x-show="!loadingLocation" class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
     </div>
 
@@ -142,29 +136,36 @@
     </div>
 </div>
 
-<script>
-    function mapHandler() {
-        return {
+<script data-navigate-once>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('bahaMap', () => ({
             map: null,
             userMarker: null,
             detailOpen: false,
             loadingLocation: false,
-            wire: null,
 
-            // Setup safely catches the Livewire connection
-            setup(wireInstance) {
-                this.wire = wireInstance;
-                setTimeout(() => { this.initMap(); }, 200);
+            init() {
+                // Ensure the DOM is fully loaded before initializing Leaflet
+                this.$nextTick(() => {
+                    this.initMap();
+                });
             },
 
             initMap() {
                 if(this.map) return;
+
                 this.map = L.map('map', { zoomControl: false }).setView([13.621775, 123.194830], 14);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(this.map);
 
                 const locations = @json($hotspots);
 
                 locations.forEach(loc => {
+                    // FATAL ERROR PROTECTION: Skip any data from the database missing coordinates
+                    if (!loc.latitude || !loc.longitude) {
+                        console.warn(`Skipping hotspot "${loc.name}" due to missing coordinates.`);
+                        return;
+                    }
+
                     let colorClass = loc.status === 'flooded' ? 'bg-red-600' : (loc.status === 'moderate' ? 'bg-amber-500' : 'bg-emerald-500');
                     let shadowClass = loc.status === 'flooded' ? 'shadow-[0_0_30px_rgba(220,38,38,1)]' : (loc.status === 'moderate' ? 'shadow-[0_0_20px_rgba(245,158,11,0.8)]' : 'shadow-[0_0_20px_rgba(16,185,129,0.8)]');
 
@@ -178,8 +179,8 @@
                     const marker = L.marker([loc.latitude, loc.longitude], { icon: glowIcon }).addTo(this.map);
 
                     marker.on('click', () => {
-                        // Uses the safe Livewire connection
-                        this.wire.selectHotspot(loc.id);
+                        // Use native Blade integration to securely contact the Livewire component
+                        @this.selectHotspot(loc.id);
                         this.detailOpen = true;
                     });
                 });
@@ -221,10 +222,9 @@
                 );
             },
 
-            // RESTORED: Recenter Map Function
             resetMap() {
                 this.map.flyTo([13.621775, 123.194830], 14, { animate: true, duration: 1.5 });
             }
-        }
-    }
+        }));
+    });
 </script>
