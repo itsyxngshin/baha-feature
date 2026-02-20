@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 #[Layout('layouts.app')]
 class BahaMap extends Component
 {
-    public $selectedHotspotId = null; // Store ID to avoid serialization issues
+    public $selectedHotspotId = null;
     public $searchQuery = '';
 
     public function selectHotspot($id)
