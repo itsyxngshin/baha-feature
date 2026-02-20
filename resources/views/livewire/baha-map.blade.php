@@ -82,6 +82,16 @@
                             <span class="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Previous Rain</span>
                             <div class="text-lg font-black text-indigo-900">{{ number_format($selectedHotspot->previous_rainfall_mm, 1) }} mm</div>
                         </div>
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-4">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-500 font-medium">⛰ Elevation</span>
+                                <span class="font-bold text-gray-800">{{ $selectedHotspot->elevation_m ?? 5.0 }}m ASL</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-500 font-medium">🛤 Drainage Level</span>
+                                <span class="font-bold text-gray-800">{{ $selectedHotspot->drainage_level }}/10</span>
+                            </div>
+                        </div>
                     </div>
                 @else
                     <h3 class="text-lg font-black text-gray-800 mb-4 pt-2 tracking-tight">Naga Hotspot Monitoring</h3>
