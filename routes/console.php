@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schedule;
 
 // Run the prediction command every hour
 Schedule::command('baha:predict')->hourly();
+Schedule::command('baha:simulate')->hourly();
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
