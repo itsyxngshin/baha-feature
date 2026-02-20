@@ -50,6 +50,12 @@ class Hotspot extends Model
         });
     }
 
+    
+    public function getUpdatedTimeAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->diffForHumans() : 'Just now';
+    }
+
     // ... existing getColorAttribute code ...
     public function getColorAttribute()
     {
