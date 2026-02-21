@@ -250,11 +250,46 @@
             },
 
             locateMe() {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser");
+                    return;
+                }
+
                 this.loadingLocation = true;
+
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    this.map.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    
+                    // Remove previous marker if the user clicks it multiple times
+                    if (this.userMarker) {
+                        this.map.removeLayer(this.userMarker);
+                    }
+                    
+                    // Create a custom pulsing blue beacon
+                    const userIcon = L.divIcon({
+                        className: '!bg-transparent !border-0',
+                        html: `<div class="relative flex items-center justify-center w-10 h-10">
+                                <div class="absolute w-full h-full rounded-full bg-blue-500 opacity-50 animate-ping"></div>
+                                <div class="relative w-4 h-4 rounded-full border-2 border-white shadow-lg bg-blue-600 z-10"></div>
+                            </div>`,
+                        iconSize: [40, 40], 
+                        iconAnchor: [20, 20]
+                    });
+
+                    // Add the new marker to the map
+                    this.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(this.map);
+                    
+                    // Zoom in on the user
+                    this.map.flyTo([lat, lng], 17);
                     this.loadingLocation = false;
-                }, () => { this.loadingLocation = false; alert("GPS Denied"); });
+                    
+                }, (error) => { 
+                    this.loadingLocation = false; 
+                    alert("GPS access denied. Please allow location permissions."); 
+                }, {
+                    enableHighAccuracy: true // Forces the device to use precise GPS (great for testing in Naga)
+                });
             },
 
             resetMap() {
