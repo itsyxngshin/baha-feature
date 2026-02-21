@@ -121,12 +121,7 @@
                             </div>
                             <p class="text-[9px] text-gray-400 font-semibold mt-auto">*Based on average 170cm adult height</p>
                         </div>
-                    </div>
-
-                    <div class="mb-6 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
-                        <h5 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Rainfall Comparison (mm)</h5>
-                        <div class="h-32 w-full"><canvas id="floodChart"></canvas></div>
-                    </div>
+                    </div>sss
 
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col justify-between">

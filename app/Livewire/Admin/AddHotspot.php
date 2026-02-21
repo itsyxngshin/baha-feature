@@ -8,6 +8,7 @@ use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\FloodPredictionService;
+
 #[Layout('layouts.app')]
 class AddHotspot extends Component
 {
