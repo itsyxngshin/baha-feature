@@ -76,21 +76,20 @@
                         </div>
                     </div>
 
-                    <div class="mb-6 bg-white border border-gray-200 shadow-sm rounded-3xl p-5 flex items-stretch gap-8 overflow-hidden">
-    
-                        <div class="relative w-20 h-48 border-l-2 border-b-2 border-gray-300 flex-shrink-0 flex justify-center items-end bg-gray-50/50 rounded-br-lg">
+                    <div class="mb-6 bg-white border border-gray-200 shadow-sm rounded-3xl p-5 flex items-stretch gap-6">
+                        <div class="relative w-20 h-48 border-l-2 border-b-2 border-gray-300 flex-shrink-0 flex justify-center items-end bg-gray-50/50 rounded-br-lg ml-10">
                             
                             <div class="absolute left-0 bottom-[100%] w-2 border-b-2 border-red-400"></div>
-                            <span class="absolute -left-8 bottom-[97%] text-[9px] font-bold text-red-500">200cm</span>
+                            <span class="absolute -left-10 bottom-[97%] text-[10px] font-bold text-red-500 w-8 text-right">200cm</span>
                             
                             <div class="absolute left-0 bottom-[85%] w-3 border-b-2 border-gray-500 z-30"></div>
-                            <span class="absolute -left-8 bottom-[82%] text-[9px] font-bold text-gray-700">170cm</span>
+                            <span class="absolute -left-10 bottom-[82%] text-[10px] font-bold text-gray-700 w-8 text-right">170cm</span>
                             
                             <div class="absolute left-0 bottom-[50%] w-2 border-b-2 border-gray-300 z-30"></div>
-                            <span class="absolute -left-8 bottom-[47%] text-[9px] font-bold text-gray-400">100cm</span>
+                            <span class="absolute -left-10 bottom-[47%] text-[10px] font-bold text-gray-400 w-8 text-right">100cm</span>
                             
                             <div class="absolute left-0 bottom-[25%] w-2 border-b-2 border-gray-300 z-30"></div>
-                            <span class="absolute -left-6 bottom-[22%] text-[9px] font-bold text-gray-400">50cm</span>
+                            <span class="absolute -left-10 bottom-[22%] text-[10px] font-bold text-gray-400 w-8 text-right">50cm</span>
 
                             <div class="absolute bottom-0 w-10 flex justify-center items-end z-10" style="height: 85%;">
                                 <svg class="w-full h-full text-gray-400" viewBox="0 0 64 200" fill="currentColor" preserveAspectRatio="none">
@@ -104,7 +103,6 @@
                             </div>
 
                             @php
-                                // Max height is now 200cm for the widget display calculation
                                 $fillPercentage = min(100, ($selectedHotspot->water_level_cm / 200) * 100);
                             @endphp
                             <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/90 to-blue-400/80 transition-all duration-1000 ease-in-out border-t border-blue-300 shadow-[0_-5px_15px_rgba(59,130,246,0.4)] z-20 backdrop-blur-[1px]"
