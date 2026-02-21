@@ -121,7 +121,7 @@
                             </div>
                             <p class="text-[9px] text-gray-400 font-semibold mt-auto">*Based on average 170cm adult height</p>
                         </div>
-                    </div>sss
+                    </div>
 
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col justify-between">
