@@ -15,20 +15,26 @@ class FloodPredictionService
     {
         $scriptPath = storage_path('app/models/predict_flood.py');
         $modelPath = storage_path('app/models/baha_flood_model.pkl');
+        $pythonCmd = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
 
-        // 1. Prepare Data
-        $inputData = json_encode([
-            'rainfall'      => $hotspot->rainfall_mm_hr,
-            'prev_rainfall' => $hotspot->previous_rainfall_mm,
-            'elevation'     => $hotspot->elevation_m,
-            'drainage'      => $hotspot->drainage_level,
+        // 1. Prepare Data as a clean array
+        $inputData = [
+            'rainfall'      => (float) $hotspot->rainfall_mm_hr,
+            'prev_rainfall' => (float) $hotspot->previous_rainfall_mm,
+            'elevation'     => (float) $hotspot->elevation_m,
+            'drainage'      => (float) $hotspot->drainage_level,
+        ];
+
+        // 2. Run Process using the Array syntax (Automatic Escaping)
+        $result = Process::run([
+            $pythonCmd,
+            $scriptPath,
+            $modelPath,
+            json_encode($inputData) // Laravel handles the quotes here
         ]);
 
-        // 2. Run Python
-        $result = Process::run("python3 {$scriptPath} {$modelPath} '{$inputData}'");
-
         if ($result->failed()) {
-            Log::error("Prediction Failed for {$hotspot->name}: " . $result->errorOutput());
+            Log::error("Python Error: " . $result->errorOutput());
             return;
         }
 
@@ -44,7 +50,7 @@ class FloodPredictionService
             $hotspot->update([
                 'water_level_cm'   => $waterLevel,
                 'status'           => $this->determineRiskLevel($waterLevel),
-                'confidence_score' => $confidence 
+                'confidence_score' => $confidence
             ]);
 
             Log::info("Updated {$hotspot->name}: Level {$waterLevel}cm (Conf: {$confidence}%)");
@@ -73,7 +79,7 @@ class FloodPredictionService
 
         // RULE 4: Sanity Check (Negative water level = model failure).
         if ($waterLevel < 0) {
-            return 0; 
+            return 0;
         }
 
         return $score;
