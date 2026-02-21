@@ -99,37 +99,73 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col justify-center py-2">
-                            <h5 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Impact Assessment</h5>
-                            <div class="mb-2">
-                                @if($selectedHotspot->water_level_cm < 15)
-                                    <span class="text-2xl font-black text-gray-800 block leading-none">Puddles</span>
-                                    <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md mt-2">✓ Safe to cross</span>
-                                @elseif($selectedHotspot->water_level_cm < 50)
-                                    <span class="text-2xl font-black text-gray-800 block leading-none">Ankle/Knee Deep</span>
-                                    <span class="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-md mt-2">⚠ Caution: Slippery</span>
-                                @elseif($selectedHotspot->water_level_cm < 100)
-                                    <span class="text-2xl font-black text-gray-800 block leading-none">Waist Deep</span>
-                                    <span class="inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md mt-2">ⓧ Impassable for vehicles</span>
-                                @elseif($selectedHotspot->water_level_cm < 150)
-                                    <span class="text-2xl font-black text-gray-800 block leading-none">Chest Deep</span>
-                                    <span class="inline-block px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-md mt-2">☠ Highly Dangerous</span>
-                                @else
-                                    <span class="text-2xl font-black text-gray-800 block leading-none">Overhead</span>
-                                    <span class="inline-block px-2 py-1 bg-red-800 text-white text-[10px] font-bold rounded-md mt-2">☠ Evacuate Immediately</span>
-                                @endif
+                        <div class="mb-6 bg-white border border-gray-200 shadow-sm rounded-3xl p-5 flex items-stretch gap-8 overflow-hidden">
+                            <div class="relative w-20 h-48 border-l-2 border-b-2 border-gray-300 flex-shrink-0 flex justify-center items-end bg-gray-50/50 rounded-br-lg">
+                                
+                                <div class="absolute left-0 bottom-[100%] w-2 border-b-2 border-red-400"></div>
+                                <span class="absolute -left-8 bottom-[97%] text-[9px] font-bold text-red-500">200cm</span>
+                                
+                                <div class="absolute left-0 bottom-[85%] w-3 border-b-2 border-gray-500 z-30"></div>
+                                <span class="absolute -left-8 bottom-[82%] text-[9px] font-bold text-gray-700">170cm</span>
+                                
+                                <div class="absolute left-0 bottom-[50%] w-2 border-b-2 border-gray-300 z-30"></div>
+                                <span class="absolute -left-8 bottom-[47%] text-[9px] font-bold text-gray-400">100cm</span>
+                                
+                                <div class="absolute left-0 bottom-[25%] w-2 border-b-2 border-gray-300 z-30"></div>
+                                <span class="absolute -left-6 bottom-[22%] text-[9px] font-bold text-gray-400">50cm</span>
+
+                                <div class="absolute bottom-0 w-10 flex justify-center items-end z-10" style="height: 85%;">
+                                    <svg class="w-full h-full text-gray-400" viewBox="0 0 64 200" fill="currentColor" preserveAspectRatio="none">
+                                        <circle cx="32" cy="16" r="16" />
+                                        <rect x="18" y="36" width="28" height="70" rx="8" />
+                                        <rect x="4" y="36" width="10" height="60" rx="5" />
+                                        <rect x="50" y="36" width="10" height="60" rx="5" />
+                                        <rect x="20" y="100" width="10" height="100" rx="5" />
+                                        <rect x="34" y="100" width="10" height="100" rx="5" />
+                                    </svg>
+                                </div>
+
+                                @php
+                                    // Max height is now 200cm for the widget display calculation
+                                    $fillPercentage = min(100, ($selectedHotspot->water_level_cm / 200) * 100);
+                                @endphp
+                                <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/90 to-blue-400/80 transition-all duration-1000 ease-in-out border-t border-blue-300 shadow-[0_-5px_15px_rgba(59,130,246,0.4)] z-20 backdrop-blur-[1px]"
+                                    style="height: {{ $fillPercentage }}%;">
+                                </div>
                             </div>
-                            <p class="text-[9px] text-gray-400 font-semibold mt-auto">*Based on average 170cm adult height</p>
+
+                            <div class="flex flex-col justify-center py-2">
+                                <h5 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Impact Assessment</h5>
+                                <div class="mb-2">
+                                    @if($selectedHotspot->water_level_cm < 15)
+                                        <span class="text-2xl font-black text-gray-800 block leading-none">Puddles</span>
+                                        <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md mt-2">✓ Safe to cross</span>
+                                    @elseif($selectedHotspot->water_level_cm < 50)
+                                        <span class="text-2xl font-black text-gray-800 block leading-none">Ankle/Knee Deep</span>
+                                        <span class="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-md mt-2">⚠ Caution: Slippery</span>
+                                    @elseif($selectedHotspot->water_level_cm < 100)
+                                        <span class="text-2xl font-black text-gray-800 block leading-none">Waist Deep</span>
+                                        <span class="inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md mt-2">ⓧ Impassable for vehicles</span>
+                                    @elseif($selectedHotspot->water_level_cm < 170)
+                                        <span class="text-2xl font-black text-gray-800 block leading-none">Chest Deep</span>
+                                        <span class="inline-block px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-md mt-2">☠ Highly Dangerous</span>
+                                    @else
+                                        <span class="text-2xl font-black text-gray-800 block leading-none">Overhead</span>
+                                        <span class="inline-block px-2 py-1 bg-red-800 text-white text-[10px] font-bold rounded-md mt-2">☠ Evacuate Immediately</span>
+                                    @endif
+                                </div>
+                                <p class="text-[9px] text-gray-400 font-semibold mt-auto">*Based on average 170cm adult height</p>
+                            </div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col justify-between">
-                            <span class="text-[9px] font-bold text-blue-400 uppercase block mb-1">Live/Synthetic Rain</span>
+                            <span class="text-[9px] font-bold text-blue-400 uppercase block mb-1">Recorded Rainfall</span>
                             <div class="text-xl font-black text-blue-900">{{ number_format($selectedHotspot->rainfall_mm_hr, 1) }} mm</div>
                         </div>
                         <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex flex-col justify-between">
-                            <span class="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Prior State Rain</span>
+                            <span class="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Prior State Rainfall</span>
                             <div class="text-xl font-black text-indigo-900">{{ number_format($selectedHotspot->previous_rainfall_mm, 1) }} mm</div>
                         </div>
 
