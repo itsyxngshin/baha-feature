@@ -17,36 +17,39 @@ class FloodPredictionService
         $modelPath = storage_path('app/models/baha_flood_model.pkl');
         $pythonCmd = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
 
-        // 1. Prepare Data as a clean array
-        $inputData = [
-            'rainfall'      => (float) $hotspot->rainfall_mm_hr,
-            'prev_rainfall' => (float) $hotspot->previous_rainfall_mm,
-            'elevation'     => (float) $hotspot->elevation_m,
-            'drainage'      => (float) $hotspot->drainage_level,
-        ];
-
-        // 2. Run Process using the Array syntax (Automatic Escaping)
+        // 1. Run Process using DIRECT ARGUMENTS (No JSON to break on Windows)
         $result = Process::run([
             $pythonCmd,
             $scriptPath,
             $modelPath,
-            json_encode($inputData) // Laravel handles the quotes here
+            (float) $hotspot->rainfall_mm_hr,
+            (float) $hotspot->previous_rainfall_mm,
+            (float) $hotspot->elevation_m,
+            (float) $hotspot->drainage_level
         ]);
 
+        // 2. Check for outright OS/Execution failures
         if ($result->failed()) {
-            Log::error("Python Error: " . $result->errorOutput());
+            Log::error("OS Python Error for {$hotspot->name}: " . $result->errorOutput());
             return;
         }
 
         $output = json_decode($result->output(), true);
 
+        // 3. NEW: Catch Python's internal errors (e.g., missing features, model errors)
+        if (isset($output['status']) && $output['status'] === 'error') {
+            Log::error("ML Model Error for {$hotspot->name}: " . $output['message']);
+            return;
+        }
+
+        // 4. Handle Success
         if (isset($output['status']) && $output['status'] === 'success') {
             $waterLevel = $output['water_level'];
 
-            // 3. CALCULATE CONFIDENCE (The New Logic)
+            // Calculate Confidence
             $confidence = $this->calculateHeuristicConfidence($hotspot->rainfall_mm_hr, $waterLevel);
 
-            // 4. Update Database
+            // Update Database
             $hotspot->update([
                 'water_level_cm'   => $waterLevel,
                 'status'           => $this->determineRiskLevel($waterLevel),
@@ -54,6 +57,9 @@ class FloodPredictionService
             ]);
 
             Log::info("Updated {$hotspot->name}: Level {$waterLevel}cm (Conf: {$confidence}%)");
+        } else {
+            // Catch anything weird that Python might have printed (like warnings)
+            Log::warning("Unexpected Output for {$hotspot->name}: " . $result->output());
         }
     }
 
