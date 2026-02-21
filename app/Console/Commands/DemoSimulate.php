@@ -21,6 +21,7 @@ class DemoSimulate extends Command
             'light' => 2.5,
             'moderate' => 15.0,
             'heavy' => 55.0, // This will likely trigger "Flooded" status
+            'severe' => 90.0,
         ];
 
         $rainValue = $scenarios[$intensity] ?? 55.0;
@@ -35,8 +36,8 @@ class DemoSimulate extends Command
             $hotspot->save();
 
             // Trigger your Python prediction logic
-            $service->predict($hotspot); 
-            
+            $service->predict($hotspot);
+
             $this->line("Updated {$hotspot->name}: Status is now {$hotspot->status}");
         }
 
