@@ -34,7 +34,6 @@ class AddHotspot extends Component
 
                 if ($response->successful()) {
                     $weatherData = $response->json();
-                    // OpenWeather returns 'rain.1h' if it's currently raining
                     $currentRainfall = $weatherData['rain']['1h'] ?? 0.0;
                 }
             } catch (\Exception $e) {
@@ -42,22 +41,38 @@ class AddHotspot extends Component
             }
         }
 
-        // 2. Create the Hotspot with fetched data
+        // 2. Fetch Topography/Elevation Data
+        $elevation = 5.0; // Safe default for Naga City terrain
+        try {
+            $elevationUrl = "https://api.open-elevation.com/api/v1/lookup?locations={$this->latitude},{$this->longitude}";
+            $elevationResponse = Http::timeout(5)->get($elevationUrl);
+
+            if ($elevationResponse->successful()) {
+                $elevationData = $elevationResponse->json();
+                $elevation = $elevationData['results'][0]['elevation'] ?? 5.0;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Could not fetch elevation for new hotspot: " . $e->getMessage());
+        }
+
+        // 3. Create the Hotspot with all fetched data
         $hotspot = Hotspot::create([
             'name' => $this->name,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'drainage_level' => $this->drainage_level,
+            'elevation_m' => $elevation, // Inserted Topography Data
             'rainfall_mm_hr' => $currentRainfall,
-            'previous_rainfall_mm' => 0, // No previous data on creation
-            'water_level_cm' => 0,       // Default, will be updated by Python
-            'status' => 'clear'          // Default
+            'previous_rainfall_mm' => 0, 
+            'water_level_cm' => 0,       
+            'status' => 'clear'          
         ]);
 
-        // 3. Run the Prediction immediately to get the water_level and correct status
+        // 4. Run the Prediction immediately
+        // The Python script now has true elevation and drainage data to work with!
         $predictionService->predict($hotspot);
 
-        // 4. Reset Form and Dispatch Event
+        // 5. Reset Form and Dispatch Event
         $this->reset(['name', 'latitude', 'longitude']);
         $this->drainage_level = 5;
 
