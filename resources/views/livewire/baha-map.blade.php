@@ -136,11 +136,11 @@
 
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col justify-between">
-                            <span class="text-[9px] font-bold text-blue-400 uppercase block mb-1">Live/Synthetic Rain</span>
+                            <span class="text-[9px] font-bold text-blue-400 uppercase block mb-1">Recorded Rainfall</span>
                             <div class="text-xl font-black text-blue-900">{{ number_format($selectedHotspot->rainfall_mm_hr, 1) }} mm</div>
                         </div>
                         <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex flex-col justify-between">
-                            <span class="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Prior State Rain</span>
+                            <span class="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Prior Rainfall</span>
                             <div class="text-xl font-black text-indigo-900">{{ number_format($selectedHotspot->previous_rainfall_mm, 1) }} mm</div>
                         </div>
 
