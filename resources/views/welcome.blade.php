@@ -43,7 +43,7 @@
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                BU MADYA Hackathon Pitch
+                MyNaga Hackathon Pitch
             </div>
 
             <h1 class="text-5xl lg:text-7xl font-black tracking-tight text-gray-900 mb-6 leading-tight">
@@ -89,9 +89,9 @@
                     <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 group-hover:text-white text-emerald-600 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">AI Water Level Prediction</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Water Level Prediction</h3>
                     <p class="text-sm text-gray-500 leading-relaxed">
-                        Utilizing the custom TURO-MOKO machine learning model to calculate localized flood heights based on real-time rainfall, historic data, and area elevation.
+                        Utilizing the machine learning model to calculate localized flood heights based on real-time rainfall, historic data, and area elevation.
                     </p>
                 </div>
 
@@ -101,7 +101,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Live Risk Mapping</h3>
                     <p class="text-sm text-gray-500 leading-relaxed">
-                        An interactive, localized map of Naga City that instantly identifies hotspots. Zones are dynamically categorized as Clear, Moderate, or Flooded.
+                        An interactive, localized map of Naga City that identifies hotspots. Zones are dynamically categorized as Clear, Moderate, or Flooded.
                     </p>
                 </div>
 
@@ -134,7 +134,7 @@
 
     <footer class="bg-white border-t border-gray-100 py-10 text-center">
         <p class="text-sm text-gray-400 font-medium">
-            Developed for the BU MADYA Hackathon • Naga City, Bicol
+            Naga City, Bicol
         </p>
     </footer>
 
