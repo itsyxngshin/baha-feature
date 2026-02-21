@@ -15,7 +15,7 @@ class FloodPredictionService
     {
         $scriptPath = storage_path('app/models/predict_flood.py');
         $modelPath = storage_path('app/models/baha_flood_model.pkl');
-        $pythonCmd = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
+        $pythonCmd = '/usr/bin/python3';
 
         // 1. Run Process using DIRECT ARGUMENTS (No JSON to break on Windows)
         $result = Process::run([
