@@ -88,7 +88,12 @@
                     <div class="flex justify-between items-start mb-6">
                         <h2 class="text-2xl font-black text-gray-800 tracking-tight leading-tight">{{ $selectedHotspot->name }}</h2>
                         <div class="text-right">
-                            <span class="block text-3xl font-black text-emerald-600">{{ round($selectedHotspot->water_level_cm) }}<span class="text-sm text-gray-400">cm</span></span>
+                            <span class="block text-3xl font-black text-emerald-600">
+                                {{ round($selectedHotspot->water_level_cm) }}<span class="text-sm font-bold text-gray-400 ml-0.5">cm</span>
+                            </span>
+                            <span class="block text-xs font-bold text-gray-500 mb-1">
+                                ~{{ number_format($selectedHotspot->water_level_cm / 30.48, 1) }} ft
+                            </span>
                             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Prediction</span>
                         </div>
                     </div>
@@ -132,18 +137,23 @@
                             <div class="mb-2">
                                 @if($selectedHotspot->water_level_cm < 15)
                                     <span class="text-2xl font-black text-gray-800 block leading-none">Puddles</span>
+                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide block mt-1">Basang Kalsada</span>
                                     <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md mt-2">✓ Safe to cross</span>
                                 @elseif($selectedHotspot->water_level_cm < 50)
                                     <span class="text-2xl font-black text-gray-800 block leading-none">Ankle/Knee Deep</span>
+                                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wide block mt-1">Abot Binti / Tuhod</span>
                                     <span class="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-md mt-2">⚠ Caution: Slippery</span>
                                 @elseif($selectedHotspot->water_level_cm < 100)
                                     <span class="text-2xl font-black text-gray-800 block leading-none">Waist Deep</span>
-                                    <span class="inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md mt-2">ⓧ Impassable for vehicles</span>
+                                    <span class="text-xs font-bold text-red-500 uppercase tracking-wide block mt-1">Abot Bewang</span>
+                                    <span class="inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md mt-2">ⓧ Impassable for light vehicles</span>
                                 @elseif($selectedHotspot->water_level_cm < 170)
                                     <span class="text-2xl font-black text-gray-800 block leading-none">Chest Deep</span>
+                                    <span class="text-xs font-bold text-red-600 uppercase tracking-wide block mt-1">Abot Dibdib</span>
                                     <span class="inline-block px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-md mt-2">☠ Highly Dangerous</span>
                                 @else
                                     <span class="text-2xl font-black text-gray-800 block leading-none">Overhead</span>
+                                    <span class="text-xs font-bold text-red-700 uppercase tracking-wide block mt-1">Lampas Tao</span>
                                     <span class="inline-block px-2 py-1 bg-red-800 text-white text-[10px] font-bold rounded-md mt-2">☠ Evacuate Immediately</span>
                                 @endif
                             </div>
