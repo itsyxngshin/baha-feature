@@ -33,7 +33,24 @@
         </button>
     </div>
 
-    <div class="absolute bottom-32 right-4 z-[500] flex flex-col gap-3">
+    <div class="absolute bottom-32 left-4 z-[500] bg-white/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-white/20 w-36 pointer-events-none transition-opacity duration-300"
+         :class="detailOpen ? 'opacity-0' : 'opacity-100'">
+        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-widest">Risk Level</h4>
+        <div class="space-y-2.5">
+            <div class="flex items-center text-[11px] font-bold text-gray-700">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 mr-2 shadow-[0_0_8px_#10b981]"></span> Clear
+            </div>
+            <div class="flex items-center text-[11px] font-bold text-gray-700">
+                <span class="w-3 h-3 rounded-full bg-amber-500 mr-2 shadow-[0_0_8px_#f59e0b]"></span> Moderate
+            </div>
+            <div class="flex items-center text-[11px] font-bold text-gray-700">
+                <span class="w-3 h-3 rounded-full bg-red-500 mr-2 shadow-[0_0_8px_#ef4444]"></span> Flooded
+            </div>
+        </div>
+    </div>
+
+    <div class="absolute bottom-32 right-4 z-[500] flex flex-col gap-3 transition-transform duration-300"
+         :class="detailOpen ? 'translate-y-[-10px] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'">
         <button @click="locateMe()" class="bg-white text-gray-600 p-3 rounded-xl shadow-lg active:scale-95">
             <svg x-show="!loadingLocation" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
             <svg x-show="loadingLocation" class="animate-spin h-6 w-6 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -261,12 +278,10 @@
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
                     
-                    // Remove previous marker if the user clicks it multiple times
                     if (this.userMarker) {
                         this.map.removeLayer(this.userMarker);
                     }
                     
-                    // Create a custom pulsing blue beacon
                     const userIcon = L.divIcon({
                         className: '!bg-transparent !border-0',
                         html: `<div class="relative flex items-center justify-center w-10 h-10">
@@ -277,10 +292,8 @@
                         iconAnchor: [20, 20]
                     });
 
-                    // Add the new marker to the map
                     this.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(this.map);
                     
-                    // Zoom in on the user
                     this.map.flyTo([lat, lng], 17);
                     this.loadingLocation = false;
                     
@@ -288,7 +301,7 @@
                     this.loadingLocation = false; 
                     alert("GPS access denied. Please allow location permissions."); 
                 }, {
-                    enableHighAccuracy: true // Forces the device to use precise GPS (great for testing in Naga)
+                    enableHighAccuracy: true 
                 });
             },
 
